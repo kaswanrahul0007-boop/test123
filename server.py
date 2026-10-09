@@ -34,21 +34,32 @@ class Handler(BaseHTTPRequestHandler):
 def ensure_cert():
     if os.path.exists(CERT) and os.path.exists(KEY):
         return
-    subprocess.run(
+    try:
+        subprocess.run(
         ["openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes", "-days", "365",
          "-keyout", KEY, "-out", CERT, "-subj", f"/CN={HOST}",
          "-addext", f"subjectAltName=IP:{HOST}"],
         check=True, stderr=subprocess.DEVNULL)
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        sys.exit("openssl not found/failed: install it, or provide CERT and KEY files.")
 
 
+HOST_ = None
 if __name__ == "__main__":
     ensure_cert()
     ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
     ctx.load_cert_chain(CERT, KEY)
-    try:
-        httpd = HTTPServer((HOST, PORT), Handler)
-    except OSError as e:
-        sys.exit(f"Cannot bind {HOST}:{PORT}: {e}\n(Port 443 needs root, and {HOST} must be an address on this machine.)")
+    httpd = None
+    for host, port in [(HOST, PORT), ("0.0.0.0", PORT), ("0.0.0.0", 8443)]:
+        try:
+            httpd = HTTPServer((host, port), Handler)
+            break
+        except OSError as e:
+            print(f"Cannot bind {host}:{port}: {e}")
+    if httpd is None:
+        sys.exit("Could not start the server.")
+    host, port = httpd.server_address
+    HOST, PORT = host, port
     httpd.socket = ctx.wrap_socket(httpd.socket, server_side=True)
-    print(f"Serving https://{HOST}:{PORT}")
+    print(f"Serving on https://{HOST}:{PORT}  (try https://localhost:{PORT})")
     httpd.serve_forever()
