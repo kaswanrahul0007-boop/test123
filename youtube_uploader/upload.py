@@ -71,6 +71,13 @@ def next_from_queue(args):
     return True
 
 
+def trending_songs(yt, region, limit=10):
+    """Today's most popular music videos (category 10) - pick one in the Shorts/Reels sound library."""
+    items = yt.videos().list(part="snippet", chart="mostPopular", regionCode=region,
+                             videoCategoryId="10", maxResults=limit).execute().get("items", [])
+    return [f"{i['snippet']['title']} - https://youtu.be/{i['id']}" for i in items]
+
+
 def upload(yt, args, hashtags):
     # First 3 hashtags in the description show above the title on YouTube.
     description = f"{args.description}\n\n" + " ".join(f"#{t}" for t in hashtags)
@@ -107,11 +114,15 @@ def main():
     p.add_argument("--publish-at", help="RFC3339 time, e.g. 2026-10-15T18:00:00Z")
     p.add_argument("--thumbnail")
     p.add_argument("--num-hashtags", type=int, default=8)
+    p.add_argument("--trending-songs", action="store_true", help="list today's trending music and exit")
     p.add_argument("--trending-only", action="store_true", help="print trends and exit")
     p.add_argument("--dry-run", action="store_true", help="show metadata, don't upload")
     args = p.parse_args()
 
     yt = get_service()
+    if args.trending_songs:
+        print("\n".join(trending_songs(yt, args.region)))
+        return
     hashtags = trending_hashtags(yt, args.region, limit=args.num_hashtags)
     print("Trending hashtags:", " ".join(f"#{t}" for t in hashtags))
     if args.trending_only:
