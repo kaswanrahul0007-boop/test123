@@ -80,10 +80,12 @@ def trending_songs(yt, region, limit=10):
 
 def upload(yt, args, hashtags):
     # First 3 hashtags in the description show above the title on YouTube.
+    own = [t.replace(" ", "").lower() for t in args.tags]
+    hashtags = list(dict.fromkeys(own + hashtags))[:15]  # own first; YouTube ignores hashtags beyond 15
     description = f"{args.description}\n\n" + " ".join(f"#{t}" for t in hashtags)
     body = {
         "snippet": {"title": args.title[:100], "description": description,
-                    "tags": hashtags + args.tags, "categoryId": args.category},
+                    "tags": hashtags, "categoryId": args.category},
         "status": {"privacyStatus": args.privacy, "selfDeclaredMadeForKids": False},
     }
     if args.publish_at:
