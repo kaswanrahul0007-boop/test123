@@ -1,0 +1,14 @@
+# A "recipe" = the clicks/typing a human does to post on a site. Edit selectors if the site changes.
+# Steps: goto <url> | click <selector> | fill <selector> <{text}> | upload <selector> <{image}> | wait <ms>
+# NOTE: sites change their HTML often and some forbid automation in their Terms. Prefer official APIs where offered.
+x:
+  - {goto: "https://x.com/compose/post"}
+  - {fill: ["[data-testid='tweetTextarea_0']", "{text}"]}
+  - {click: "[data-testid='tweetButton']"}
+  - {wait: 3000}
+linkedin:
+  - {goto: "https://www.linkedin.com/feed/"}
+  - {click: "button.share-box-feed-entry__trigger"}
+  - {fill: ["div.ql-editor", "{text}"]}
+  - {click: "button.share-actions__primary-action"}
+  - {wait: 3000}

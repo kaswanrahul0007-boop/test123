@@ -1,0 +1,37 @@
+# Copy to config.yaml and edit. Secrets go in environment variables, never in this file.
+workspace: ~/BotWorkspace
+dry_run: true            # true = bot only PRINTS risky actions (send email, post). Set false when you trust it.
+
+tasks:
+  organize_files:
+    folder: ~/Downloads
+    rules:
+      Images:    [.jpg, .jpeg, .png, .gif, .webp]
+      Documents: [.pdf, .doc, .docx, .txt, .pptx]
+      Sheets:    [.xls, .xlsx, .csv]
+      Archives:  [.zip, .rar, .7z]
+      Installers: [.exe, .msi]
+      Videos:    [.mp4, .mkv, .mov]
+
+  report:
+    source_folder: ~/BotWorkspace/data      # put .csv files here
+    output_dir: ~/BotWorkspace/reports
+    formats: [xlsx, docx]
+
+  email:
+    imap_host: imap.gmail.com
+    smtp_host: smtp.gmail.com
+    user: you@gmail.com
+    password_env: BOT_EMAIL_PASSWORD        # use a Gmail "App Password"
+    digest_to: you@gmail.com                # where to send the daily digest
+
+  social:
+    queue: ~/BotWorkspace/posts.csv         # columns: platform,text,image,status
+    profile_dir: ~/BotWorkspace/browser-profile   # you log in ONCE, session is reused
+    recipes_file: recipes.yaml
+
+schedule:
+  - {task: organize_files, every: day, at: "09:00"}
+  - {task: report,         every: monday, at: "08:30"}
+  - {task: email_digest,   every: day, at: "18:00"}
+  - {task: social_post,    every: day, at: "12:00"}
